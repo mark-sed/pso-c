@@ -1,4 +1,4 @@
-FLAGS=-Wall -Werror -pedantic -std=c99
+FLAGS=-Wall -pedantic -std=c11
 OUTPUT=main
 SOURCES=main.c pso.c
 

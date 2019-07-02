@@ -4,6 +4,12 @@
 #include <stdbool.h>
 #include <stdarg.h>
 
+#define ASSERT_ALLOCATION  //< If this is defined, every allocation will be checked if successful
+
+#define COEFF_W  0.50  //< Inertia coefficient (should be in range of <0.4, 0.9>)
+#define COEFF_CP 2.05  //< Cognitive coefficient (should be a little bit above 2)
+#define COEFF_CG 2.05  //< Social coefficient (should have same or similar value as cognitive coefficient)
+
 /**
  * Return type for statical PSO
  */
@@ -26,6 +32,13 @@ typedef double (* func3dim)(double, double);
  * N dimansional function
  */
 typedef double (* funcndim)(double, ...);
+
+/**
+ * Initializer function for PSO module
+ * @warning This function should be called only once before any other PSO function is called
+ * @note This function calls srand function
+ */
+void pso_init();
 
 /**
  * Particle swarm optimization algorithm for 3 dimensional functions
