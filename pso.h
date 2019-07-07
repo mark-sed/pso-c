@@ -33,7 +33,7 @@ typedef double (* func3dim)(double, double);
 /**
  * N dimansional function
  */
-typedef double (* funcndim)(double, ...);
+typedef double (* funcndim)(double *);
 
 
 #ifdef ASSERT_ALLOCATION
@@ -58,7 +58,7 @@ double* pso3dim(func3dim function, double bounds[2][2], fit_func fitness, unsign
 /**
  * Particle swarm optimization algorithm for n dimensional functions
  */
-double* psondim(func3dim function, double *bounds[2], unsigned short dimensions, fit_func fitness, unsigned int particle_am, unsigned long max_iter);
+double* psondim(funcndim function, double bounds[][2], unsigned short dimensions, fit_func fitness, unsigned int particle_am, unsigned long max_iter);
 
 /**
  * Particle swarm optimization algorithm that doesn't use dynamical

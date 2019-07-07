@@ -7,7 +7,7 @@ build:
 	gcc $(FLAGS) -o $(OUTPUT) $(SOURCES) $(LIBS)
 
 O0:
-	gcc $(FLASG) -O0 -o $(OUTPUT)_O0 $(SOURCES) $(LIBS)
+	gcc $(FLAGS) -O0 -o $(OUTPUT)_O0 $(SOURCES) $(LIBS)
 
 all: build O0
 

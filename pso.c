@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <float.h>
+#include <string.h>
 
 /**
  * Macro for generating random double in passed in range.
@@ -164,12 +165,168 @@ double *pso3dim(func3dim function, double bounds[2][2], fit_func fitness, unsign
     return best_pos;
 }
 
+/**
+ * Initializes n dimensional particle
+ */
+static void init_particlendim(TParticle *p, double bounds[][2], unsigned short dim){
+   // Set random velocity and position for every dimension
+   for(unsigned short i = 0; i < dim; i++){
+        p->velocity[i] = random_double(-1, 1);
+        p->position[i] = random_double(bounds[i][0], bounds[i][1]);
+   }
+}
+
+/**
+ * Update n dimensional particle's velocity and position
+ */
+static void update_particlendim(TParticle *p, double bounds[][2], double *best_pos, unsigned short dim){
+    // Random coefficient pre-multiplied by cognitive/social coefficient
+    double rp = random_double(0, 1) * COEFF_CP;
+    double rg = random_double(0, 1) * COEFF_CG;
+
+    // Calculate new velocity for all dimensions
+    // Differences are pre-calculated to avoid calculating them twice
+    for(unsigned short i = 0; i < dim; i++){
+        double pos_diff = best_pos[i] - p->position[i];
+        p->velocity[i] = COEFF_W * p->velocity[i] + rp * pos_diff + rg * pos_diff;
+
+        // Update position of the particle
+        p->position[i] += p->velocity[i];
+
+        // Check if new position is still in bounds
+        if(p->position[i] < bounds[i][0]){
+            p->position[i] = bounds[i][0];
+        }
+        else if(p->position[i] > bounds[i][1]){
+            p->position[i] = bounds[i][1];
+        }
+    }
+}
 
 /**
  * Particle swarm optimization algorithm for n dimensional functions
  */
-double* psondim(func3dim function, double *bounds[2], unsigned short dimensions, fit_func fitness, unsigned int particle_am, unsigned long max_iter){
-    return NULL;
+double* psondim(funcndim function, double bounds[][2], unsigned short dimensions, fit_func fitness, unsigned int particle_am, unsigned long max_iter){
+    // Adjust dimensions (eg.: 3 dimensions means only 2 coordinates will be saved - 3rd will be the result of this functions)
+    dimensions--; 
+    // Create swarm
+    TParticle *swarm = malloc(sizeof(TParticle)*particle_am);
+#ifdef ASSERT_ALLOCATION
+    if(!swarm){
+        error_handler();
+    }
+#endif // ASSERT_ALLOCATION
+    // Allocate particle attributes to correct dimensions
+    // and set each particle's attributes
+    for(unsigned int i = 0; i < particle_am; i++){
+        // Allocate space for velocity for all dimensions
+        swarm[i].velocity = malloc(sizeof(double)*dimensions);
+#ifdef ASSERT_ALLOCATION
+        if(!swarm[i].velocity){
+            // All previously allocated attributes have to be freed
+            for(unsigned int a = 0; a < i; a++){
+                free(swarm[a].velocity);
+                free(swarm[a].position);
+                free(swarm[a].best_pos);
+            }
+            // Free the array itself
+            free(swarm);
+            // Call error handler
+            error_handler();
+        }
+#endif // ASSERT_ALLOCATION
+        
+        // Allocate space for position for all dimensions
+        swarm[i].position = malloc(sizeof(double)*dimensions);
+#ifdef ASSERT_ALLOCATION
+        if(!swarm[i].position){
+            // All previously allocated attributes have to be freed
+            free(swarm[i].velocity);
+            for(unsigned int a = 0; a < i; a++){
+                free(swarm[a].velocity);
+                free(swarm[a].position);
+                free(swarm[a].best_pos);
+            }
+            // Free the array itself
+            free(swarm);
+            // Call error handler
+            error_handler();
+        }
+#endif // ASSERT_ALLOCATION
+
+        // Allocate space for best position for all dimensions
+        swarm[i].best_pos = malloc(sizeof(double)*dimensions);
+#ifdef ASSERT_ALLOCATION
+        if(!swarm[i].best_pos){
+            // All previously allocated attributes have to be freed
+            free(swarm[i].velocity);
+            free(swarm[i].position);
+            for(unsigned int a = 0; a < i; a++){
+                free(swarm[a].velocity);
+                free(swarm[a].position);
+                free(swarm[a].best_pos);
+            }
+            // Free the array itself
+            free(swarm);
+            // Call error handler
+            error_handler();
+        }
+#endif // ASSERT_ALLOCATION
+
+        // Initialize the particle
+        init_particlendim(&(swarm[i]), bounds, dimensions);
+    }
+
+    double *best_pos = malloc(sizeof(double) * dimensions);  // Global best position
+#ifdef ASSERT_ALLOCATION
+    if(!best_pos){
+        for(unsigned int i = 0; i < particle_am; i++){
+            free(swarm[i].velocity);
+            free(swarm[i].position);
+            free(swarm[i].best_pos);
+        }
+
+        free(swarm);
+        error_handler();
+    }
+#endif // ASSERT_ALLOCATION
+    double best_value = DBL_MAX;  // Global best value (for best position)
+
+    for(unsigned long i = 0; i < max_iter; i++){
+        for(unsigned int a = 0; a < particle_am; a++){
+            // Evaluate current position of the current particle
+            double value = function(swarm[a].position);
+            // Check if this is new personal best value
+            if(fitness(value, swarm[a].best_val) || i == 0){
+                // Save the personal best position and value
+                swarm[a].best_val = value;
+                // Copying position into personal best position
+                //   memory does not overlap, so memcpy is used
+                memcpy(swarm[a].best_pos, swarm[a].position, sizeof(double)*dimensions);
+                // Now check if the value is better than global best value
+                // This can be inside this if statement because any global best
+                //   has to have better or same fitness function value than
+                //   any personal best
+                if(fitness(value, best_value) || best_value == DBL_MAX){
+                    best_value = value;
+                    memcpy(best_pos, swarm[a].position, sizeof(double)*dimensions);
+                }
+            }
+        }
+        // Updating the velocity and position of particles
+        for(unsigned int a = 0; a < particle_am; a++){
+            update_particlendim(&(swarm[a]), bounds, best_pos, dimensions);
+        }
+    }
+
+    // Free allocated memory
+    for(unsigned int i = 0; i < particle_am; i++){
+        free(swarm[i].velocity);
+        free(swarm[i].position);
+        free(swarm[i].best_pos);
+    }
+    free(swarm);
+    return best_pos;
 }
 
 /**
