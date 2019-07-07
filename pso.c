@@ -36,11 +36,12 @@ typedef struct {
     double best_val;   //< Value of the best position
 } TParticle;
 
+
 #ifdef ASSERT_ALLOCATION
 /**
  * Error handling function
  */
-_Noreturn void error_handler(){
+_Noreturn void __attribute__((weak)) error_handler(){
     exit(1);
 }
 #endif //ASSERT_ALLOCATION
@@ -121,7 +122,7 @@ double *pso3dim(func3dim function, double bounds[2][2], fit_func fitness, unsign
     for(unsigned int i = 0; i < particle_am; i++){
         init_particle3dim(&(swarm[i]), bounds);
     }
-    
+
     double *best_pos = malloc(sizeof(double) * 2);  // Global best position
 #ifdef ASSERT_ALLOCATION
     if(!best_pos){
@@ -175,6 +176,43 @@ double* psondim(func3dim function, double *bounds[2], unsigned short dimensions,
  * Particle swarm optimization algorithm that doesn't use dynamical
  * allocation. Can be used only for 2 dimensional functions.
  */
-TPSOxy pso3dim_static(func3dim function, double bounds[3][2], fit_func fitness, unsigned int particle_am, unsigned long max_iter){
-    return (TPSOxy){0.0, 0.0};
+TPSOxy pso3dim_static(func3dim function, double bounds[2][2], fit_func fitness, unsigned long max_iter){
+    // Create array of particles (swarm)
+    TParticle3Dim swarm[PSO3DIM_STATIC_PARTICLES];
+    // Initialize the particles
+    for(unsigned int i = 0; i < PSO3DIM_STATIC_PARTICLES; i++){
+        init_particle3dim(&(swarm[i]), bounds);
+    }
+
+    double best_pos[2];
+    double best_value = DBL_MAX;
+
+    for(unsigned long i = 0; i < max_iter; i++){
+        for(unsigned int a = 0; a < PSO3DIM_STATIC_PARTICLES; a++){
+            // Evaluate current position of the current particle
+            double value = function(swarm[a].position[0], swarm[a].position[1]);
+            // Check if this is new personal best value
+            if(fitness(value, swarm[a].best_val) || i == 0){
+                // Save the personal best position and value
+                swarm[a].best_val = value;
+                swarm[a].best_pos[0] = swarm[a].position[0];
+                swarm[a].best_pos[1] = swarm[a].position[1];
+                // Now check if the value is better than global best value
+                // This can be inside this if statement because any global best
+                //   has to have better or same fitness function value than
+                //   any personal best
+                if(fitness(value, best_value) || best_value == DBL_MAX){
+                    best_value = value;
+                    best_pos[0] = swarm[a].position[0];
+                    best_pos[1] = swarm[a].position[1];
+                }
+            }
+        }
+        // Updating the velocity and position of particles
+        for(unsigned int a = 0; a < PSO3DIM_STATIC_PARTICLES; a++){
+            update_particle3dim(&(swarm[a]), bounds, best_pos);
+        }
+    }
+
+    return (TPSOxy){best_pos[0], best_pos[1]};
 }

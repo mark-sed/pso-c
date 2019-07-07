@@ -6,13 +6,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// TODO: Make them more precise
 #ifndef M_PI
-#define M_PI 3.14159265358979323846
+// PI (Taken from boost library)
+#define M_PI (double)(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651e+00)
 #endif
 
 #ifndef M_E
-#define M_E 2.71828182845904523536
+// Euler's constant (taken from boost library)
+#define M_E (double)(2.71828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852516642742746639193e+00)
 #endif
 
 bool less_than(double a, double b){
@@ -26,8 +27,14 @@ double ackleys_function(double x, double y){
 int main(int argc, char *argv[]){
    pso_init();
    double bounds[2][2] = {{-50.0, 50.0}, {-50., 50.}};
-   double *res = pso3dim(ackleys_function, bounds, less_than, 20, 100);
-   printf("[%.*e, %.*e]\n", DECIMAL_DIG, res[0], DECIMAL_DIG, res[1]);
-   free(res);
+   
+   //double *res = pso3dim(ackleys_function, bounds, less_than, 20, 100);
+   //printf("[%.*e, %.*e]\n", DECIMAL_DIG, res[0], DECIMAL_DIG, res[1]);
+   //free(res);
+   
+   TPSOxy res = pso3dim_static(ackleys_function, bounds, less_than, 1000);
+   printf("[%.*e, %.*e]\n", DECIMAL_DIG, res.x, DECIMAL_DIG, res.y);
+   
+   
    return 0;
 }

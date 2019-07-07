@@ -4,7 +4,9 @@
 #include <stdbool.h>
 #include <stdarg.h>
 
-#define ASSERT_ALLOCATION  //< If this is defined, every allocation will be checked if successful
+#define ASSERT_ALLOCATION  //< If this is defined, every allocation will be checked if it was successful
+
+#define PSO3DIM_STATIC_PARTICLES 20  //< How many particles will be used in pso3dim_static function
 
 #define COEFF_W  0.50  //< Inertia coefficient (should be in range of <0.4, 0.9>)
 #define COEFF_CP 2.05  //< Cognitive coefficient (should be a little bit above 2)
@@ -33,6 +35,14 @@ typedef double (* func3dim)(double, double);
  */
 typedef double (* funcndim)(double, ...);
 
+
+#ifdef ASSERT_ALLOCATION
+/**
+ * Error handling function
+ */
+void __attribute__((weak)) error_handler();
+#endif //ASSERT_ALLOCATION
+
 /**
  * Initializer function for PSO module
  * @warning This function should be called only once before any other PSO function is called
@@ -54,6 +64,6 @@ double* psondim(func3dim function, double *bounds[2], unsigned short dimensions,
  * Particle swarm optimization algorithm that doesn't use dynamical
  * allocation. Can be used only for 2 dimensional functions.
  */
-TPSOxy pso3dim_static(func3dim function, double bounds[2][2], fit_func fitness, unsigned int particle_am, unsigned long max_iter);
+TPSOxy pso3dim_static(func3dim function, double bounds[2][2], fit_func fitness, unsigned long max_iter);
 
 #endif //_PSO_H_
