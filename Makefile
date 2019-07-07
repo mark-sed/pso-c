@@ -1,4 +1,4 @@
-FLAGS=-Wall -pedantic -std=c11
+FLAGS=-Wall -pedantic -std=c11 -g
 OUTPUT=main
 SOURCES=main.c pso.c
 LIBS=-lm

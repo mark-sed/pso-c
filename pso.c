@@ -1,3 +1,17 @@
+/**
+ * @file pso.c
+ * @author Marek Sedláček
+ * @email mr.mareksedlacek@gmail.com, xsedla1b@fit.vutbr.cz
+ * @date July 2019
+ * 
+ * @brief Source file for PSO module
+ *
+ * This file contains function definitions for Particle
+ * Swarm Optimization (PSO) module.
+ * PSO module is able optimize functions using PSO algorithm.
+ *
+ */
+
 #include "pso.h"
 #include "stddef.h"
 #include <stdlib.h>
@@ -40,7 +54,8 @@ typedef struct {
 
 #ifdef ASSERT_ALLOCATION
 /**
- * Error handling function
+ * Error handler function
+ * @note This function is weak and can be redifined elsewhere
  */
 _Noreturn void __attribute__((weak)) error_handler(){
     exit(1);
@@ -59,6 +74,8 @@ void pso_init(){
 
 /**
  * Initializes starting attributes for a particle
+ * @param p Particle to be initialized
+ * @param bounds Function bounds
  */
 static void init_particle3dim(TParticle3Dim *p, double bounds[2][2]){
     // Set values for every dimension
@@ -72,6 +89,9 @@ static void init_particle3dim(TParticle3Dim *p, double bounds[2][2]){
 
 /**
  * Update velocity and position of a particle based on best global best position found
+ * @param p Particle to be updated
+ * @param bounds Function bounds
+ * @param best_pos Global best position
  */
 static void update_particle3dim(TParticle3Dim *p, double bounds[2][2], double best_pos[2]){
     // Random coefficient pre-multiplied by cognitive/social coefficient
@@ -110,6 +130,18 @@ static void update_particle3dim(TParticle3Dim *p, double bounds[2][2], double be
 
 /**
  * Particle swarm optimization algorithm for 3 dimensional functions
+ * @param function Function in which is optimization done
+ * @param bounds Bounds of the function in which will be the function optimized.
+ *               this should be 2 arrays of 2 values where the 1st one is
+ *               the minimum and second one is the maximum. E.g.: for `x in <0, 5> &
+ *               y in <-10, 10>` the bounds should be `{{0.0, 5.0}, {-10.0, 10.0}}`.
+ * @param fitness Fitness functions that determinates if passed in value is better
+ *                than other passed in value
+ * @param particle_am The amount of particles to use for optimization (10 to 20 is
+ *                    usually good enough amount for most functions)
+ * @param max_iter The amount of iterations that should be done.
+ *                 More results in better precision but longer calculation.
+ * @return Array with 2 doubles - the best found x and y coordinates.
  */
 double *pso3dim(func3dim function, double bounds[2][2], fit_func fitness, unsigned int particle_am, unsigned long max_iter){
     // Creating array of particles
@@ -167,10 +199,13 @@ double *pso3dim(func3dim function, double bounds[2][2], fit_func fitness, unsign
 
 /**
  * Initializes n dimensional particle
+ * @param p Particle to be initialized
+ * @param bounds Function bounds
+ * @param coords How many coordinates need to be initialized (dimensions - 1)
  */
-static void init_particlendim(TParticle *p, double bounds[][2], unsigned short dim){
+static void init_particlendim(TParticle *p, double bounds[][2], unsigned short coords){
    // Set random velocity and position for every dimension
-   for(unsigned short i = 0; i < dim; i++){
+   for(unsigned short i = 0; i < coords; i++){
         p->velocity[i] = random_double(-1, 1);
         p->position[i] = random_double(bounds[i][0], bounds[i][1]);
    }
@@ -178,15 +213,19 @@ static void init_particlendim(TParticle *p, double bounds[][2], unsigned short d
 
 /**
  * Update n dimensional particle's velocity and position
+ * @param p Particle to be initialized
+ * @param bounds Function bounds
+ * @param best_pos Best global position
+ * @param coords How many coordinates need to be initialized (dimensions - 1)
  */
-static void update_particlendim(TParticle *p, double bounds[][2], double *best_pos, unsigned short dim){
+static void update_particlendim(TParticle *p, double bounds[][2], double *best_pos, unsigned short coords){
     // Random coefficient pre-multiplied by cognitive/social coefficient
     double rp = random_double(0, 1) * COEFF_CP;
     double rg = random_double(0, 1) * COEFF_CG;
 
     // Calculate new velocity for all dimensions
     // Differences are pre-calculated to avoid calculating them twice
-    for(unsigned short i = 0; i < dim; i++){
+    for(unsigned short i = 0; i < coords; i++){
         double pos_diff = best_pos[i] - p->position[i];
         p->velocity[i] = COEFF_W * p->velocity[i] + rp * pos_diff + rg * pos_diff;
 
@@ -205,6 +244,23 @@ static void update_particlendim(TParticle *p, double bounds[][2], double *best_p
 
 /**
  * Particle swarm optimization algorithm for n dimensional functions
+ * @param function Function in which is optimization done
+ * @param bounds Bounds of the function in which will be the function optimized.
+ *               this should be n arrays (where n is the amount of dimensions of
+ *               the optimized function) of 2 values where the 1st one is the
+ *               minimum and second one is the maximum. E.g.: for `x in <0, 5> &
+ *               y in <-10, 10>` the bounds should be `{{0.0, 5.0}, {-10.0, 10.0}}`.
+ * @param dimensions The dimensions of optimized function.
+ *                   Dimensions means how many coordinates are there in the optimized
+ *                   function. E.g.: z = x^2 + y is 3 dimensional - it has 2 variables
+ *                   plus the result (3 dimensions).
+ * @param fitness Fitness functions that determinates if passed in value is better
+ *                than other passed in value
+ * @param particle_am The amount of particles to use for optimization (10 to 20 is
+ *                    usually good enough amount for most functions)
+ * @param max_iter The amount of iterations that should be done.
+ *                 More results in better precision but longer calculation.
+ * @return Array with n (n = dimensions - 1) doubles - the best found coordinates.
  */
 double* psondim(funcndim function, double bounds[][2], unsigned short dimensions, fit_func fitness, unsigned int particle_am, unsigned long max_iter){
     // Adjust dimensions (eg.: 3 dimensions means only 2 coordinates will be saved - 3rd will be the result of this functions)
@@ -280,12 +336,12 @@ double* psondim(funcndim function, double bounds[][2], unsigned short dimensions
     double *best_pos = malloc(sizeof(double) * dimensions);  // Global best position
 #ifdef ASSERT_ALLOCATION
     if(!best_pos){
+    	// Free all previously allocated resources
         for(unsigned int i = 0; i < particle_am; i++){
             free(swarm[i].velocity);
             free(swarm[i].position);
             free(swarm[i].best_pos);
         }
-
         free(swarm);
         error_handler();
     }
@@ -330,8 +386,18 @@ double* psondim(funcndim function, double bounds[][2], unsigned short dimensions
 }
 
 /**
- * Particle swarm optimization algorithm that doesn't use dynamical
- * allocation. Can be used only for 2 dimensional functions.
+ * Particle swarm optimization algorithm for 3 dimensional functions that does not use dynamical allocation
+ * @param function Function in which is optimization done
+ * @param bounds Bounds of the function in which will be the function optimized.
+ *               this should be 2 arrays of 2 values where the 1st one is
+ *               the minimum and second one is the maximum. E.g.: for `x in <0, 5> &
+ *               y in <-10, 10>` the bounds should be `{{0.0, 5.0}, {-10.0, 10.0}}`.
+ * @param fitness Fitness functions that determinates if passed in value is better
+ *                than other passed in value
+ * @param max_iter The amount of iterations that should be done.
+ *                 More results in better precision but longer calculation.
+ * @return Struct with 2 doubles - the best found x and y coordinates.
+ * @note The amount of particles is determinated by the value of `PSO3DIM_STATIC_PARTICLES` macro
  */
 TPSOxy pso3dim_static(func3dim function, double bounds[2][2], fit_func fitness, unsigned long max_iter){
     // Create array of particles (swarm)
