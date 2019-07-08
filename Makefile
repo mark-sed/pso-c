@@ -1,13 +1,14 @@
+COMPILER=gcc
 FLAGS=-Wall -pedantic -std=c11 -g
 OUTPUT=main
 SOURCES=main.c pso.c
 LIBS=-lm
 
 build:
-	gcc $(FLAGS) -o $(OUTPUT) $(SOURCES) $(LIBS)
+	$(COMPILER) $(FLAGS) -o $(OUTPUT) $(SOURCES) $(LIBS)
 
 O0:
-	gcc $(FLAGS) -O0 -o $(OUTPUT)_O0 $(SOURCES) $(LIBS)
+	$(COMPILER) $(FLAGS) -O0 -o $(OUTPUT)_O0 $(SOURCES) $(LIBS)
 
 all: build O0
 
