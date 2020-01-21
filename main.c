@@ -30,6 +30,10 @@ double ackleys_function_n(double *pos){
     return -20 * pow(M_E, -0.2*sqrt(0.5*(x*x + y*y))) - pow(M_E, 0.5*(cos(2*M_PI*x)+cos(2*M_PI*y))) + M_E + 20;
 }
 
+double func2(double x, double y){
+  return ((1.0-x)*(1.0-x)) + 100*((y - x*x)*(y - x*x));
+}
+
 
 
 int main(int argc, char *argv[]){
@@ -40,12 +44,12 @@ int main(int argc, char *argv[]){
    //printf("[%.*e, %.*e]\n", DECIMAL_DIG, res[0], DECIMAL_DIG, res[1]);
    //free(res);
    
-   //TPSOxy res = pso3dim_static(ackleys_function, bounds, less_than, 1000000);
-   //printf("[%.*e, %.*e]\n", DECIMAL_DIG, res.x, DECIMAL_DIG, res.y);
+   TPSOxy res = pso3dim_static(ackleys_function, bounds, less_than, 50);
+   printf("[%.*e, %.*e]\n", DECIMAL_DIG, res.x, DECIMAL_DIG, res.y);
    
-   double *res = psondim(ackleys_function_n, bounds, 3, less_than, 20, 1000000);
-   printf("[%.*e, %.*e]\n", DECIMAL_DIG, res[0], DECIMAL_DIG, res[1]);
-   free(res);
+   //double *res = psondim(ackleys_function_n, bounds, 3, less_than, 20, 1000000);
+   //printf("[%.*e, %.*e]\n", DECIMAL_DIG, res[0], DECIMAL_DIG, res[1]);
+   //free(res);
    
    return 0;
 }
