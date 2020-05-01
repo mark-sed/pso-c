@@ -1,7 +1,6 @@
 /**
  * @file pso.h
  * @author Marek Sedláček
- * @email mr.mareksedlacek@gmail.com, xsedla1b@fit.vutbr.cz
  * @date July 2019
  * 
  * @brief Header file for PSO module
@@ -18,6 +17,8 @@
  * overriden by re-declaration as non-weak function in other 
  * module.
  *
+ * This code was made for my bachelor's thesis at
+ * Brno University of Technology
  */
 
 #ifndef _PSO_H_
@@ -25,9 +26,9 @@
 
 #include <stdbool.h>
 
-#define ASSERT_ALLOCATION  //< If this is defined, every allocation will be checked if it was successful
+//#define ASSERT_ALLOCATION  //< If this is defined, every allocation will be checked if it was successful
 
-#define PSO3DIM_STATIC_PARTICLES 20  //< How many particles will be used in pso3dim_static function
+#define PSO3DIM_STATIC_PARTICLES 40  //< How many particles will be used in pso3dim_static function
 
 #define COEFF_W  0.50  //< Inertia coefficient (should be in range of <0.4, 0.9>)
 #define COEFF_CP 2.05  //< Cognitive coefficient (should be a little bit above 2)
@@ -134,5 +135,22 @@ double* psondim(funcndim function, double bounds[][2], unsigned short dimensions
  * @note The amount of particles is determinated by the value of `PSO3DIM_STATIC_PARTICLES` macro
  */
 TPSOxy pso3dim_static(func3dim function, double bounds[2][2], fit_func fitness, unsigned long max_iter);
+
+/**
+ * Particle swarm optimization algorithm for 3 dimensional functions that does not use dynamical allocation
+ * Optimized by not using as many function calls
+ * @param function Function in which is optimization done
+ * @param bounds Bounds of the function in which will be the function optimized.
+ *               this should be 2 arrays of 2 values where the 1st one is
+ *               the minimum and second one is the maximum. E.g.: for `x in <0, 5> &
+ *               y in <-10, 10>` the bounds should be `{{0.0, 5.0}, {-10.0, 10.0}}`.
+ * @param fitness Fitness functions that determinates if passed in value is better
+ *                than other passed in value
+ * @param max_iter The amount of iterations that should be done.
+ *                 More results in better precision but longer calculation.
+ * @return Struct with 2 doubles - the best found x and y coordinates.
+ * @note The amount of particles is determinated by the value of `PSO3DIM_STATIC_PARTICLES` macro
+ */
+TPSOxy pso3dim_static_opt(func3dim function, double bounds[2][2], fit_func fitness, unsigned long max_iter);
 
 #endif //_PSO_H_

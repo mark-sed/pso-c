@@ -1,1 +1,0 @@
-M_PI, M_E = https://www.boost.org/doc/libs/1_56_0/boost/math/constants/constants.hpp
